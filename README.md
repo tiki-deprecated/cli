@@ -1,13 +1,35 @@
 # TIKI CLI
 
+[![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+
 A quick POC of a Rust-based CLI to interact with TIKI's APIs.
 
-## Services
+This is in early development and is not yet stable.
 
-These are the high-level commands:
+# Usage
 
-- `account`: Interacts with the [account service](tiki/core-account-service)
-- 
+Build with `cargo build`.
+
+Set your TIKI API Key as the `TIKI_API_KEY` env variable.
+
+Help is available via the `help` subcommand (or the -h / --help) flags
+for top-level commands, as well as all available subcommands.
+
+```
+$ tiki --help
+Usage: tiki --api-key <API_KEY> <COMMAND>
+
+Commands:
+  account       
+  cleanroom     
+  query         
+  subscription  
+  help          Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help     Print help
+  -V, --version  Print version
+```
 
 ## Example Commands
 
@@ -15,18 +37,23 @@ account:
   - login
   - get-profile
   - update-profile
-  - delete-account
 
 cleanroom:
-  - create
-  - list
-  - get
+  - create-cleanroom
+  - list-cleanrooms
+  - get-cleanroom
+  - delete-cleanroom
+
+query:
+  - create-estimate
+  - list-estimates
 
 subscription:
-  - list
-  - get
-  - create-estimate
-  - purchase
+  - list-subscriptions
+  - get-subscription
+  - purchase-subscription
+  - pause-subscription
+  - delete-subscription
 
 ## API Endpoints
 
