@@ -14,7 +14,7 @@ async fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        Some(Commands::Account(args)) => {
+        Commands::Account(args) => {
             match args.command {
                 AccountCommands::Login { .. } => {
                     println!("account login");
@@ -27,7 +27,7 @@ async fn main() {
                 }
             }
         }
-        Some(Commands::Cleanroom(args)) => {
+        Commands::Cleanroom(args) => {
             match args.command {
                 CleanroomCommands::ListCleanrooms { .. } => {
                     println!("cleanroom list-cleanrooms");
@@ -40,7 +40,7 @@ async fn main() {
                 }
             }
         }
-        Some(Commands::Query(args)) => {
+        Commands::Query(args) => {
             match args.command {
                 QueryCommands::CreateEstimate { .. } => {
                     println!("query create-estimate");
@@ -50,7 +50,7 @@ async fn main() {
                 }
             }
         }
-        Some(Commands::Subscription(args)) => {
+        Commands::Subscription(args) => {
             match args.command {
                 SubscriptionCommands::GetSubscription { .. } => {
                     println!("subscription get-subscription");
@@ -69,6 +69,5 @@ async fn main() {
                 }
             }
         }
-        None => todo!()
     }
 }

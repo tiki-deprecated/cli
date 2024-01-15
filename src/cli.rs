@@ -2,13 +2,12 @@ use clap::{Args, Parser, Subcommand};
 
 #[derive(Debug, Parser)]
 #[command(author, version, about, long_about = None)]
-#[command(propagate_version = true)]
 pub struct Cli {
     #[arg(long, hide = true, env = "TIKI_API_KEY")]
     pub api_key: String,
 
     #[command(subcommand)]
-    pub command: Option<Commands>,
+    pub command: Commands,
 }
 
 #[derive(Debug, Subcommand)]
