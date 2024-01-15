@@ -55,6 +55,7 @@ pub enum AccountCommands {
     Login {},
     GetProfile {},
     UpdateProfile {
+        #[arg(short, long, required = true)]
         email: Option<String>,
     },
 }
@@ -63,11 +64,17 @@ pub enum AccountCommands {
 pub enum CleanroomCommands {
     ListCleanrooms {},
     GetCleanroom {
+        #[arg(short, long, required = true)]
         cleanroom_id: Option<String>,
     },
     CreateCleanroom {
+        #[arg(short, long)]
         name: Option<String>,
+
+        #[arg(short, long)]
         description: Option<String>,
+
+        #[arg(short, long, required = true)]
         aws_account_id: Option<String>,
     },
 }
@@ -75,9 +82,17 @@ pub enum CleanroomCommands {
 #[derive(Debug, Subcommand)]
 pub enum QueryCommands {
     CreateEstimate {
+        #[arg(short, long, required = true)]
         name: Option<String>,
+
+        #[arg(short, long)]
         query: Option<String>,
-        subscription_id: Option<String>,
+
+        #[arg(short, long)]
+        query_file: Option<String>,
+
+        #[arg(short, long, required = true)]
+        cleanroom_id: Option<String>,
     },
     ListEstimates {},
 }
@@ -85,18 +100,23 @@ pub enum QueryCommands {
 #[derive(Debug, Subcommand)]
 pub enum SubscriptionCommands {
     GetSubscription {
+        #[arg(short, long, required = true)]
         subscription_id: Option<String>,
     },
     ListSubscriptions {
+        #[arg(short, long)]
         status: Option<String>,
     },
     PurchaseSubscription {
+        #[arg(short, long, required = true)]
         subscription_id: Option<String>,
     },
     PauseSubscription {
+        #[arg(short, long, required = true)]
         subscription_id: Option<String>,
     },
     DeleteSubscription {
+        #[arg(short, long, required = true)]
         subscription_id: Option<String>,
     },
 }

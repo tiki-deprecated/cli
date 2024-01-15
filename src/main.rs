@@ -6,6 +6,7 @@ use tracing_subscriber;
 
 use cli::{Cli, Commands};
 use cli::{AccountCommands, CleanroomCommands, QueryCommands, SubscriptionCommands};
+use cli::{AccountArgs, CleanroomArgs, QueryArgs, SubscriptionArgs};
 
 #[instrument]
 #[tokio::main]
