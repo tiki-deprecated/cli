@@ -1,177 +1,74 @@
-use clap::{Parser, Subcommand};
-use cli_table::{print_stdout, Table, WithTitle};
-use serde::{Deserialize, Serialize};
-use tracing::{debug, error};
+mod cli;
+
+use clap::Parser;
+use tracing::{instrument};
 use tracing_subscriber;
 
-#[derive(Parser)]
-#[command(author, version, about, long_about = None)]
-#[command(propagate_version = true)]
-struct Cli {
-    #[arg(long, hide = true, env = "TIKI_API_KEY")]
-    api_key: String,
+use cli::{Cli, Commands};
+use cli::{AccountCommands, CleanroomCommands, QueryCommands, SubscriptionCommands};
+use cli::{AccountArgs, CleanroomArgs, QueryArgs, SubscriptionArgs};
 
-    #[command(subcommand)]
-    command: Option<Commands>,
-}
-
-#[derive(Subcommand)]
-enum Commands {
-    GetProfile {},
-    ListCleanrooms {},
-    ListSubscriptions {},
-
-    #[command(subcommand)]
-    Account(AccountCommands),
-
-    #[command(subcommand)]
-    Cleanroom(CleanroomCommands),
-
-    #[command(subcommand)]
-    Query(QueryCommands),
-
-    #[command(subcommand)]
-    Subscription(SubscriptionCommands),
-}
-
-#[derive(Subcommand)]
-enum AccountCommands {
-    GetProfile {},
-    UpdateProfile {},
-}
-
-#[derive(Subcommand)]
-enum CleanroomCommands {
-    Create {},
-    Get {},
-    List {},
-}
-
-#[derive(Subcommand)]
-enum QueryCommands {
-    Create {},
-}
-
-#[derive(Subcommand)]
-enum SubscriptionCommands {
-    Get {},
-    List {},
-    Purchase {},
-}
-
-fn main() {
+#[instrument]
+#[tokio::main]
+async fn main() {
     let _subscriber = tracing_subscriber::fmt::init();
     let cli = Cli::parse();
 
-    match &cli.command {
-        Some(Commands::GetProfile { .. }) => {
-            get_profile(cli.api_key);
+    match cli.command {
+        Commands::Account(args) => {
+            match args.command {
+                AccountCommands::Login { .. } => {
+                    println!("account login");
+                }
+                AccountCommands::GetProfile { .. } => {
+                    println!("account get-profile");
+                }
+                AccountCommands::UpdateProfile { .. } => {
+                    println!("account update-profile");
+                }
+            }
         }
-        Some(Commands::ListCleanrooms { .. }) => {
-            list_cleanrooms(cli.api_key);
+        Commands::Cleanroom(args) => {
+            match args.command {
+                CleanroomCommands::ListCleanrooms { .. } => {
+                    println!("cleanroom list-cleanrooms");
+                }
+                CleanroomCommands::GetCleanroom { .. } => {
+                    println!("cleanroom get-cleanroom");
+                }
+                CleanroomCommands::CreateCleanroom { .. } => {
+                    println!("cleanroom create-cleanroom");
+                }
+            }
         }
-        Some(Commands::ListSubscriptions { .. }) => {
-            println!("Executed the list-subscriptions subcommand");
+        Commands::Query(args) => {
+            match args.command {
+                QueryCommands::CreateEstimate { .. } => {
+                    println!("query create-estimate");
+                }
+                QueryCommands::ListEstimates { .. } => {
+                    println!("query list-estimates");
+                }
+            }
         }
-        Some(Commands::Account(_)) => {
-            println!("Executed the account subcommand");
+        Commands::Subscription(args) => {
+            match args.command {
+                SubscriptionCommands::GetSubscription { .. } => {
+                    println!("subscription get-subscription");
+                }
+                SubscriptionCommands::ListSubscriptions { .. } => {
+                    println!("subscription list-subscriptions");
+                }
+                SubscriptionCommands::PurchaseSubscription { .. } => {
+                    println!("subscription purchase-subscription");
+                }
+                SubscriptionCommands::PauseSubscription { .. } => {
+                    println!("subscription pause-subscription");
+                }
+                SubscriptionCommands::DeleteSubscription { .. } => {
+                    println!("subscription delete-subscription");
+                }
+            }
         }
-        Some(Commands::Cleanroom(_)) => {
-            println!("Executed the cleanroom subcommand");
-        }
-        Some(Commands::Query(_)) => {
-            println!("Executed the query subcommand");
-        }
-        Some(Commands::Subscription(_)) => {
-            println!("Executed the subscription subcommand");
-        }
-        None => {}
     }
-}
-
-#[tokio::main]
-async fn get_profile(token: String) -> Result<(), Box<dyn std::error::Error>> {
-    let jwt_header = jsonwebtoken::decode_header(&token);
-    match jwt_header {
-        Ok(_) => debug!("jwt header validation successful"),
-        Err(e) => error!("jwt validation failed: {:?}", e),
-    };
-    let response = reqwest::Client::new()
-        .get("https://account.mytiki.com/api/latest/profile")
-        .bearer_auth(token)
-        .send()
-        .await?;
-
-    match response.status() {
-        reqwest::StatusCode::OK => {
-            debug!("user validated");
-        },
-        reqwest::StatusCode::UNAUTHORIZED => {
-            println!("Bad token, bro");
-        },
-        _ => {
-            error!("Something bad!");
-        },
-    };
-
-    let json = response.json::<AccountProfileRsp>().await?;
-    println!("Hi, {}", json.email);
-
-    Ok(())
-}
-
-#[tokio::main]
-async fn list_cleanrooms(token: String) -> Result<(), Box<dyn std::error::Error>> {
-    let jwt_header = jsonwebtoken::decode_header(&token);
-    match jwt_header {
-        Ok(_) => debug!("jwt header validation successful"),
-        Err(e) => error!("jwt validation failed: {:?}", e),
-    };
-    let response = reqwest::Client::new()
-        .get("https://account.mytiki.com/api/latest/cleanroom")
-        .bearer_auth(token)
-        .send()
-        .await?;
-
-    match response.status() {
-        reqwest::StatusCode::OK => {
-            debug!("cleanrooms listed");
-        },
-        reqwest::StatusCode::UNAUTHORIZED => {
-            println!("Bad token, bro");
-        },
-        _ => {
-            error!("Something bad!");
-        },
-    };
-
-    let cleanrooms = response.json::<ListCleanroomsRsp>().await?;
-    print_stdout(cleanrooms.cleanrooms.with_title());
-
-    Ok(())
-}
-
-#[derive(Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-struct AccountProfileRsp {
-    user_id: String,
-    email: String,
-    org_id: String,
-    modified: String,
-    created: String,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-#[derive(Table)]
-#[serde(rename_all = "camelCase")]
-struct Cleanroom {
-    cleanroom_id: String,
-    name: String,
-    description: String,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(transparent)]
-struct ListCleanroomsRsp {
-    cleanrooms: Vec<Cleanroom>,
 }
