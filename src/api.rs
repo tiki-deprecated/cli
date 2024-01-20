@@ -1,10 +1,13 @@
-#[tokio::main]
-async fn get_profile(token: String) -> Result<(), Box<dyn std::error::Error>> {
-    let jwt_header = jsonwebtoken::decode_header(&token);
-    match jwt_header {
-        Ok(_) => debug!("jwt header validation successful"),
-        Err(e) => error!("jwt validation failed: {:?}", e),
-    };
+mod utils;
+
+use serde::{Deserialize, Serialize};
+use reqwest;
+use tracing::{debug, error};
+
+
+pub async fn get_profile(token: String) -> Result<(), Box<dyn std::error::Error>> {
+    utils::validate_jwt(&token);
+
     let response = reqwest::Client::new()
         .get("https://account.mytiki.com/api/latest/profile")
         .bearer_auth(token)
@@ -29,6 +32,7 @@ async fn get_profile(token: String) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+/*
 #[tokio::main]
 async fn list_cleanrooms(token: String) -> Result<(), Box<dyn std::error::Error>> {
     let jwt_header = jsonwebtoken::decode_header(&token);
@@ -59,6 +63,7 @@ async fn list_cleanrooms(token: String) -> Result<(), Box<dyn std::error::Error>
 
     Ok(())
 }
+*/
 
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -71,7 +76,7 @@ struct AccountProfileRsp {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-#[derive(Table)]
+//#[derive(Table)]
 #[serde(rename_all = "camelCase")]
 struct Cleanroom {
     cleanroom_id: String,

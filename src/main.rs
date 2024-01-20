@@ -1,4 +1,6 @@
 mod cli;
+mod api;
+mod utils;
 
 use clap::Parser;
 use tracing::{instrument};
@@ -6,7 +8,6 @@ use tracing_subscriber;
 
 use cli::{Cli, Commands};
 use cli::{AccountCommands, CleanroomCommands, QueryCommands, SubscriptionCommands};
-use cli::{AccountArgs, CleanroomArgs, QueryArgs, SubscriptionArgs};
 
 #[instrument]
 #[tokio::main]
@@ -21,7 +22,7 @@ async fn main() {
                     println!("account login");
                 }
                 AccountCommands::GetProfile { .. } => {
-                    println!("account get-profile");
+                    api::get_profile(cli.api_key);
                 }
                 AccountCommands::UpdateProfile { .. } => {
                     println!("account update-profile");
