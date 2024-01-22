@@ -1,28 +1,57 @@
 mod utils;
 
+use jsonwebtoken;
 use serde::{Deserialize, Serialize};
-use reqwest;
+use reqwest::{Client, StatusCode};
 use tracing::{debug, error};
 
 
-pub async fn get_profile(token: String) -> Result<(), Box<dyn std::error::Error>> {
-    utils::validate_jwt(&token);
+#[derive(Error, Debug)]
+pub enum ApiError {
+    #[error("API key is not a valid JWT")]
+    InvalidApiKeyFormat,
 
-    let response = reqwest::Client::new()
+    #[error("")]
+    AccessDenied,
+
+    #[error("An unknown error occured")]
+    UnknownError,
+}
+
+
+pub async fn get_profile(token: String) -> Result<(), ApiError> {
+    match jsonwebtoken::decode_header(&token) {
+        Err(e) => return Err(ApiError::InvalidApiKeyFormat),
+    }
+
+    /* API currently returns the following:
+     *
+     * If bearer token is not a valid JWT:
+     *
+     *   status: 401
+     *   response_body: |
+     *     {"message":"An error occurred while attempting to decode the Jwt: Malformed token"}
+     * 
+     * If bearer token IS valid JWT, but with dummy values 
+     *   status: 401
+     *   response_body: |
+     *      {"message": "An error occurred while attempting to decode the Jwt: Signed JWT rejected: Another algorithm expected, or no matching key(s) found" }
+     */
+    let response = Client::new()
         .get("https://account.mytiki.com/api/latest/profile")
         .bearer_auth(token)
         .send()
         .await?;
 
     match response.status() {
-        reqwest::StatusCode::OK => {
+        StatusCode::OK => {
             debug!("user validated");
         },
-        reqwest::StatusCode::UNAUTHORIZED => {
-            println!("Bad token, bro");
+        StatusCode::UNAUTHORIZED => {
+            return Err(ApiError::AccessDenied);
         },
         _ => {
-            error!("Something bad!");
+            return Err(ApiError::UnknownError);
         },
     };
 
