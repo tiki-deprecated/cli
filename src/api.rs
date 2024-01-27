@@ -2,8 +2,9 @@ mod utils;
 
 use jsonwebtoken;
 use serde::{Deserialize, Serialize};
-use reqwest::{Client, StatusCode};
-use tracing::{debug, error};
+use reqwest;
+use thiserror::{from, error};
+use tracing::debug;
 
 
 #[derive(Error, Debug)]
@@ -11,18 +12,19 @@ pub enum ApiError {
     #[error("API key is not a valid JWT")]
     InvalidApiKeyFormat,
 
-    #[error("")]
-    AccessDenied,
+    #[error("Access denied")]
+    AccessDenied(#[from] reqwest::Error),
 
     #[error("An unknown error occured")]
-    UnknownError,
+    UnknownError(#[from] reqwest::Error),
 }
 
 
 pub async fn get_profile(token: String) -> Result<(), ApiError> {
-    match jsonwebtoken::decode_header(&token) {
+    let _ = match jsonwebtoken::decode_header(&token) {
+        Ok(_) => Ok(),
         Err(e) => return Err(ApiError::InvalidApiKeyFormat),
-    }
+    };
 
     /* API currently returns the following:
      *
@@ -37,17 +39,17 @@ pub async fn get_profile(token: String) -> Result<(), ApiError> {
      *   response_body: |
      *      {"message": "An error occurred while attempting to decode the Jwt: Signed JWT rejected: Another algorithm expected, or no matching key(s) found" }
      */
-    let response = Client::new()
+    let response = reqwest::Client::new()
         .get("https://account.mytiki.com/api/latest/profile")
         .bearer_auth(token)
         .send()
         .await?;
 
     match response.status() {
-        StatusCode::OK => {
+        reqwest::StatusCode::OK => {
             debug!("user validated");
         },
-        StatusCode::UNAUTHORIZED => {
+        reqwest::StatusCode::UNAUTHORIZED => {
             return Err(ApiError::AccessDenied);
         },
         _ => {
